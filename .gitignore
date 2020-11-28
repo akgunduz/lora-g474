@@ -1,0 +1,6 @@
+Debug/
+desktop.ini
+.idea
+cmake-build-debug/
+.settings/
+.mxproject
