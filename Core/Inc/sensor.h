@@ -25,7 +25,6 @@ typedef struct
 extern sensor_conf_t sensorConf;
 //extern float OdrMeasured;
 
-void Init_Sensors(void);
 uint8_t Collect_Data(void);
 uint8_t Meas_Odr(void);
 void HP_DC_Changer(void);
@@ -36,7 +35,7 @@ uint8_t Disable_FIFO(void);
 uint8_t Get_Available_Sensors(void);
 void En_Dis_HP_Or_DCnull(void);
 
-uint8_t Init_Demo(void);
+uint8_t Init_Accelerator(void);
 uint8_t Restart_FIFO(void);
 uint8_t Get_HP_Filter(void);
 uint8_t Set_HP_Filter(uint8_t value);
@@ -46,6 +45,6 @@ uint8_t Set_Full_Scale(uint8_t value);
 uint16_t Get_Samples(void);
 uint8_t Set_Samples(uint8_t value);
 
-uint8_t Process_Sensor_Data(void);
+uint8_t Process_Accelerator_Data(void);
 
 #endif /* INC_SENSOR_H_ */

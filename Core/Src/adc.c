@@ -428,7 +428,7 @@ unsigned char AnalogDevicesInit()
 
 unsigned char CollectAnalogData()
 {
-	unsigned char status = 1;
+	unsigned char status = TRUE;
 
 	for (int i = 0; i < 6; i++) {
 		//calibrated_adc1[i] = adc1[i] / 8;

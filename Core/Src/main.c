@@ -49,6 +49,7 @@
 #define LPP_DATATYPE_PULSE 0x75
 
 //#define ENABLE_LORA
+#define ENABLE_SENSOR
 
 #ifdef ENABLE_LORA
 #define LORAWAN_APP_PORT           99;            /*LoRaWAN application port*/
@@ -166,14 +167,17 @@ int main(void)
 
   BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 
-  Init_Sensors();
+#ifdef ENABLE_SENSOR
 
-  //  if (SensorDevicesInit() != TRUE) {
-//	  printf("Sensors can not initialized! \r\n");
-//
-//  } else {
-//	  printf("Sensors initialized! \r\n");
-//  }
+  if (Init_Accelerator() != 0)
+  {
+	  printf("Can not init Accelerator! \r\n");
+
+  } else {
+
+	  printf("Accelerator is initialized! \r\n");
+  }
+#endif
 
   if (AnalogDevicesInit() != TRUE) {
 	  printf("ADCs can not initialized! \r\n");
@@ -194,14 +198,6 @@ int main(void)
 
   printf("Starting \r\n");
 
-  if (Init_Demo() != 0)
-  {
-	  printf("Can not init ACC demo! \r\n");
-
-  } else {
-	  printf("ACC demo is initialized! \r\n");
-  }
-
   while (1)
   {
     /* USER CODE END WHILE */
@@ -212,12 +208,13 @@ int main(void)
     Lora_fsm();
 #endif
 
+#ifdef ENABLE_SENSOR
 /* Data processing started */
-    if (Process_Sensor_Data() != TRUE)
+    if (Process_Accelerator_Data() != TRUE)
     {
-    	printf("Can not process sensor data! \r\n");
+    	printf("Can not process accelerator data! \r\n");
     }
-
+#endif
   /* USER CODE END 3 */
   }
 }
@@ -310,6 +307,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	}
 
 	if (htim == hCollectCycleTimer) {
+
 /*
 		if (CollectSensorData() != COMPONENT_OK) {
 			printf("Can not get sensor data! \r\n");
@@ -318,8 +316,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			printf("Collected sensor data :  temperature = %d, pressure = %d, humidity = %d \r\n",
 					temperature, pressure, humidity);
 		}
+*/
 
-		if (CollectAnalogData() != COMPONENT_OK) {
+		if (CollectAnalogData() != TRUE) {
 			printf("Can not get analog data! \r\n");
 
 		} else {
@@ -327,7 +326,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			printf("Collected analog data :  adc1[0] = %d, adc1[1] = %d, adc2[0] = %d \r\n",
 			processed_adc1[0], processed_adc1[1], processed_adc2[0] );
 		}
-		*/
+
 		return;
 	} 
 

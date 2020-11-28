@@ -20,23 +20,6 @@ uint8_t SensorList[NUM_SENSORS + 1];
 
 sensor_conf_t sensorConf = {.hp_filter = 0, .switch_HP_to_DC_null = 0};
 
-/**
- * @brief  Initialize all sensors
- * @param  None
- * @retval None
- */
-void Init_Sensors(void)
-{
-  (void)IKS01A2_MOTION_SENSOR_Init(IKS01A2_LSM6DSL_0, MOTION_ACCELERO);
-
-  /* Set accelerometer:
-   *   - ODR >= 416Hz
-   *   - FS   = <-2g, 2g>
-   */
-  (void)IKS01A2_MOTION_SENSOR_SetOutputDataRate(IKS01A2_LSM6DSL_0, MOTION_ACCELERO, LSM6DSL_DEFAULT_ODR);
-  (void)IKS01A2_MOTION_SENSOR_SetFullScale(IKS01A2_LSM6DSL_0, MOTION_ACCELERO, LSM6DSL_DEFAULT_FS);
-}
-
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 //	BSP_LED_Toggle(LED_GREEN);
@@ -473,14 +456,23 @@ void En_Dis_HP_Or_DCnull(void)
 }
 
 /**
-  * @brief  Initialize demo
+  * @brief  Initialize Accelerator
   * @param  None
   * @retval 1 in case of success
   * @retval 0 in case of failure
   */
-uint8_t Init_Demo(void)
+uint8_t Init_Accelerator(void)
 {
   uint8_t data;
+
+  (void)IKS01A2_MOTION_SENSOR_Init(IKS01A2_LSM6DSL_0, MOTION_ACCELERO);
+
+  /* Set accelerometer:
+   *   - ODR >= 416Hz
+   *   - FS   = <-2g, 2g>
+   */
+  (void)IKS01A2_MOTION_SENSOR_SetOutputDataRate(IKS01A2_LSM6DSL_0, MOTION_ACCELERO, LSM6DSL_DEFAULT_ODR);
+  (void)IKS01A2_MOTION_SENSOR_SetFullScale(IKS01A2_LSM6DSL_0, MOTION_ACCELERO, LSM6DSL_DEFAULT_FS);
 
   /* Disable HP filter if needed */
   if (SensorSetting.hp_filter_available == 1)
@@ -679,7 +671,7 @@ uint8_t *Get_Sensor_List(void)
   return SensorList;
 }
 
-uint8_t Process_Sensor_Data(void)
+uint8_t Process_Accelerator_Data(void)
 {
 	ACTIVE_AXIS_t axis_active;
 
