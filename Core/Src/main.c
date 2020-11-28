@@ -18,6 +18,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include <accelerator.h>
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
@@ -30,7 +31,6 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "retarget.h"
-#include "sensor.h"
 #include "MotionSP.h"
 #include "lora_driver.h"
 /* USER CODE END Includes */
@@ -48,8 +48,8 @@
 #define LPP_DATATYPE_ADC 0x74
 #define LPP_DATATYPE_PULSE 0x75
 
-//#define ENABLE_LORA
-#define ENABLE_SENSOR
+#define ENABLE_LORA
+//#define ENABLE_SENSOR
 
 #ifdef ENABLE_LORA
 #define LORAWAN_APP_PORT           99;            /*LoRaWAN application port*/
@@ -210,7 +210,7 @@ int main(void)
 
 #ifdef ENABLE_SENSOR
 /* Data processing started */
-    if (Process_Accelerator_Data() != TRUE)
+    if (Collect_Accelerator_Data() != TRUE)
     {
     	printf("Can not process accelerator data! \r\n");
     }

@@ -1,14 +1,21 @@
+#include <accelerator.h>
 #include "iks01a2_motion_sensors.h"
 #include "iks01a2_motion_sensors_ex.h"
 #include "MotionSP.h"
-#include "sensor_def.h"
-#include "sensor.h"
 
 #define LSM6DSL_HP_DISABLE        0xFBU  /* Disable HP filter */
 #define LSM6DSL_HP_ENABLE_DIV400  0x34U  /* Enable HP filter, DIV/400 */
 #define LSM6DSL_DEFAULT_ODR       417.0f /* Default output/batch data rate */
 #define LSM6DSL_DEFAULT_FS        2      /* Default full scale */
 #define NUM_SENSORS  1
+
+/* LSM6DSL */
+static const float Lsm6dslOdr[] = {6, 208, 416, 833, 1660, 3330, 6660};
+static const int32_t Lsm6dslFs[] = {4, 2, 4, 8, 16};
+static const ACTIVE_AXIS_t Lsm6dslAxis[] = {X_AXIS, Y_AXIS, Z_AXIS, ALL_ACTIVE}; /* Simulation only (not supported by sensor) */
+static const uint32_t Lsm6dslSamplesList[] = {2, 256, 512};
+
+const accelerator_setting_t acceleratorSetting = {"LSM6DSL", Lsm6dslOdr, Lsm6dslFs, Lsm6dslAxis, Lsm6dslSamplesList, 1};
 
 static volatile uint32_t IntCurrentTime1 = 0;
 static volatile uint32_t IntCurrentTime2 = 0;
@@ -18,20 +25,10 @@ static uint32_t StartTick = 0;
 
 uint8_t SensorList[NUM_SENSORS + 1];
 
-sensor_conf_t sensorConf = {.hp_filter = 0, .switch_HP_to_DC_null = 0};
+accelerator_conf_t acceleratorConf = {.hp_filter = 0, .switch_HP_to_DC_null = 0};
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-//	BSP_LED_Toggle(LED_GREEN);
-//	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_0);
-//	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_13);
-
-//	if( GPIO_Pin == LSM303AGR_INT_Pin )
-//	{
-//	//  AXL_INT_received = 1;
-//	  printf("AXL_INT_received! \r\n");
-//	}
-
   if (GPIO_Pin == GPIO_PIN_5)
   {
 	AccIntReceived = 1;
@@ -249,15 +246,15 @@ void HP_DC_Changer(void)
   uint8_t ret_err = 0;
   uint8_t data;
 
-  if (sensorConf.switch_HP_to_DC_null)
+  if (acceleratorConf.switch_HP_to_DC_null)
   {
-	  sensorConf.switch_HP_to_DC_null = 0;
-	  sensorConf.hp_filter = 0;
+	  acceleratorConf.switch_HP_to_DC_null = 0;
+	  acceleratorConf.hp_filter = 0;
   }
   else
   {
     /* Disable HP filter */
-    if (SensorSetting.hp_filter_available)
+    if (acceleratorSetting.hp_filter_available)
     {
       if (IKS01A2_MOTION_SENSOR_Read_Register(IKS01A2_LSM6DSL_0, LSM6DSL_CTRL8_XL, &data) != BSP_ERROR_NONE)
       {
@@ -274,8 +271,8 @@ void HP_DC_Changer(void)
 
     if (ret_err == 0)
     {
-    	sensorConf.switch_HP_to_DC_null = 1;
-    	sensorConf.hp_filter = 0;
+    	acceleratorConf.switch_HP_to_DC_null = 1;
+    	acceleratorConf.hp_filter = 0;
       fftIsEnabled = 0;
     }
   }
@@ -393,22 +390,22 @@ void En_Dis_HP_Or_DCnull(void)
   uint8_t ret_err = 0;
   uint8_t data;
 
-  if (sensorConf.switch_HP_to_DC_null)
+  if (acceleratorConf.switch_HP_to_DC_null)
   {
-    if (sensorConf.hp_filter)
+    if (acceleratorConf.hp_filter)
     {
-    	sensorConf.hp_filter = 0;
+    	acceleratorConf.hp_filter = 0;
     }
     else
     {
-    	sensorConf.hp_filter = 1;
+    	acceleratorConf.hp_filter = 1;
     }
 
     fftIsEnabled = 0;
   }
   else
   {
-    if (sensorConf.hp_filter)
+    if (acceleratorConf.hp_filter)
     {
       /* Disable HP filter */
       if (IKS01A2_MOTION_SENSOR_Read_Register(IKS01A2_LSM6DSL_0, LSM6DSL_CTRL8_XL, &data) != BSP_ERROR_NONE)
@@ -425,7 +422,7 @@ void En_Dis_HP_Or_DCnull(void)
 
       if (ret_err == 0)
       {
-    	  sensorConf.hp_filter = 0;
+    	  acceleratorConf.hp_filter = 0;
         fftIsEnabled = 0;
       }
     }
@@ -446,7 +443,7 @@ void En_Dis_HP_Or_DCnull(void)
 
       if (ret_err == 0)
       {
-    	  sensorConf.hp_filter = 1;
+    	  acceleratorConf.hp_filter = 1;
         fftIsEnabled = 0;
       }
     }
@@ -475,7 +472,7 @@ uint8_t Init_Accelerator(void)
   (void)IKS01A2_MOTION_SENSOR_SetFullScale(IKS01A2_LSM6DSL_0, MOTION_ACCELERO, LSM6DSL_DEFAULT_FS);
 
   /* Disable HP filter if needed */
-  if (SensorSetting.hp_filter_available == 1)
+  if (acceleratorSetting.hp_filter_available == 1)
   {
     if (IKS01A2_MOTION_SENSOR_Read_Register(IKS01A2_LSM6DSL_0, LSM6DSL_CTRL8_XL, &data) != BSP_ERROR_NONE)
     {
@@ -498,8 +495,8 @@ uint8_t Init_Accelerator(void)
     return 0;
   }
 
-  sensorConf.switch_HP_to_DC_null = 0;
-  sensorConf.hp_filter = 0;
+  acceleratorConf.switch_HP_to_DC_null = 0;
+  acceleratorConf.hp_filter = 0;
   fftIsEnabled = 0;
 
   /* Set parameters for MotionSP library */
@@ -570,7 +567,7 @@ uint8_t Init_Accelerator(void)
     return 0;
   }
 
-  if (SensorSetting.hp_filter_available == 0)
+  if (acceleratorSetting.hp_filter_available == 0)
   {
     HP_DC_Changer();
   }
@@ -619,9 +616,9 @@ uint8_t Restart_FIFO(void)
 uint8_t Set_ODR(uint8_t value)
 {
   /* Set chosen ODR */
-  if ((value <= SensorSetting.odr_list[0]) && value != 0)
+  if ((value <= acceleratorSetting.odr_list[0]) && value != 0)
   {
-    if (IKS01A2_MOTION_SENSOR_SetOutputDataRate(IKS01A2_LSM6DSL_0, MOTION_ACCELERO, SensorSetting.odr_list[value]) != BSP_ERROR_NONE)
+    if (IKS01A2_MOTION_SENSOR_SetOutputDataRate(IKS01A2_LSM6DSL_0, MOTION_ACCELERO, acceleratorSetting.odr_list[value]) != BSP_ERROR_NONE)
     {
       return 0;
     }
@@ -629,7 +626,7 @@ uint8_t Set_ODR(uint8_t value)
     Meas_Odr();
     fftIsEnabled = 0;
 
-    if (sensorConf.hp_filter == 1)
+    if (acceleratorConf.hp_filter == 1)
     {
       HAL_Delay((uint32_t)(320 / AcceleroODR.Frequency));
       Restart_FIFO();
@@ -646,7 +643,7 @@ uint8_t Set_ODR(uint8_t value)
   */
 uint8_t Get_HP_Filter(void)
 {
-  return sensorConf.hp_filter;
+  return acceleratorConf.hp_filter;
 }
 
 /**
@@ -671,7 +668,7 @@ uint8_t *Get_Sensor_List(void)
   return SensorList;
 }
 
-uint8_t Process_Accelerator_Data(void)
+uint8_t Collect_Accelerator_Data(void)
 {
 	ACTIVE_AXIS_t axis_active;
 
